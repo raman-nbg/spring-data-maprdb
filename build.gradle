@@ -1,15 +1,15 @@
 apply plugin: 'java'
 
 ext {
-    springVersion = "5.1.1.RELEASE"
-    springDataVersion = "2.1.1.RELEASE"
-    mapRVersion = "6.0.1-mapr"
+    springVersion = "5.2.0.RELEASE"
+    springDataVersion = "2.2.0.RELEASE"
+    mapRVersion = "6.1.0-mapr"
     zookeeperVersion = "3.4.11-mapr-1808"
-    drillJdbcVersion = "1.14.0-mapr"
+    drillJdbcVersion = "1.16.0.0-mapr"
 }
 
 group 'com.mapr.springframework.data'
-version '1.0.0.M2'
+version '1.1.0-SNAPSHOT'
 
 sourceCompatibility = 1.8
 
