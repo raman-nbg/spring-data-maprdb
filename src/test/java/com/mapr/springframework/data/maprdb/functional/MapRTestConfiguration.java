@@ -1,6 +1,9 @@
 package com.mapr.springframework.data.maprdb.functional;
 
 import com.mapr.springframework.data.maprdb.config.AbstractMapRConfiguration;
+import com.mapr.springframework.data.maprdb.core.MapROperations;
+import com.mapr.springframework.data.maprdb.core.MapROptions;
+import com.mapr.springframework.data.maprdb.core.MapRTemplate;
 import com.mapr.springframework.data.maprdb.repository.config.EnableMapRRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
@@ -24,23 +27,10 @@ public class MapRTestConfiguration extends AbstractMapRConfiguration {
     public String databasePassword;
 
     @Override
-    protected String getDatabaseName() {
-        return databaseName;
-    }
+    public MapROperations maprOperations(MapROptions mapROptions) {
+        MapROptions options = new MapROptions();
+        options.setDatabaseName(databaseName);
 
-    @Override
-    protected String getHost() {
-        return databaseHost;
+        return new MapRTemplate(options);
     }
-
-    @Override
-    protected String getUsername() {
-        return databaseUsername;
-    }
-
-    @Override
-    protected String getPassword() {
-        return databasePassword;
-    }
-
 }

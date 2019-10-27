@@ -1,6 +1,5 @@
 package com.mapr.springframework.data.maprdb.core;
 
-import com.mapr.db.Table;
 import org.ojai.store.Connection;
 import org.ojai.store.DocumentStore;
 import org.ojai.store.Query;
@@ -11,11 +10,13 @@ import java.util.Optional;
 
 public interface MapROperations {
 
+    boolean isAutoCreateTablesEnabled();
+
     Connection getConnection();
 
-    <T> Table createTable(Class<T> entityClass);
+    <T> DocumentStore createTable(Class<T> entityClass);
 
-    Table createTable(final String tableName);
+    DocumentStore createTable(final String tableName);
 
     <T> void dropTable(Class<T> entityClass);
 

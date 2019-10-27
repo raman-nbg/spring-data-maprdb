@@ -6,18 +6,23 @@ import java.util.Map;
 
 public class MapRJsonConverter {
 
-    private ObjectMapper mapper;
+    private ObjectMapper objectMapper;
 
     public MapRJsonConverter() {
-        mapper = new ObjectMapper();
-        mapper.setAnnotationIntrospector(new MapRAnnotationIntrospector());
+        this(new ObjectMapper());
+
+    }
+
+    public MapRJsonConverter(ObjectMapper objectMapper) {
+        this.objectMapper = objectMapper;
+        objectMapper.setAnnotationIntrospector(new MapRAnnotationIntrospector());
     }
 
     public <T> Map toJson(T objectToConvert) {
-        return mapper.convertValue(objectToConvert, Map.class);
+        return objectMapper.convertValue(objectToConvert, Map.class);
     }
 
     public <T> T toObject(Map json, Class<T> entityClass) {
-        return mapper.convertValue(json, entityClass);
+        return objectMapper.convertValue(json, entityClass);
     }
 }

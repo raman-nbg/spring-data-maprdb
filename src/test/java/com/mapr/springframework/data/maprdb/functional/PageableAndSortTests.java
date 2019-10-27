@@ -112,7 +112,7 @@ public class PageableAndSortTests extends AbstractFunctionalTests {
         List<User> expectedUsers = Lists.reverse(users.stream().sorted(Comparator.comparing(User::getName))
                 .collect(Collectors.toList()));
 
-        List<User> usersFromDB = repository.findFirst100ByEnabledFalse(new Sort(Sort.Direction.DESC, "name"));
+        List<User> usersFromDB = repository.findFirst100ByEnabledFalse(Sort.by(Sort.Direction.DESC, "name"));
 
         Assert.assertEquals(expectedUsers.size(), usersFromDB.size());
 
@@ -121,7 +121,7 @@ public class PageableAndSortTests extends AbstractFunctionalTests {
 
     @Test
     public void multipleSortParameterQuery() {
-        List<User> usersFromDB = repository.findFirst100ByEnabledFalse(new Sort(Sort.Direction.ASC,"name", "_id"));
+        List<User> usersFromDB = repository.findFirst100ByEnabledFalse(Sort.by(Sort.Direction.ASC,"name", "_id"));
 
         List<User> expectedUsers = users.stream().sorted(Comparator.comparing(User::getName).thenComparing(User::getId))
                 .collect(Collectors.toList());

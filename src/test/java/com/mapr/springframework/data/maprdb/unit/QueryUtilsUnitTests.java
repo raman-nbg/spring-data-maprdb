@@ -17,9 +17,9 @@ import static org.springframework.data.repository.query.parser.Part.Type.*;
 
 public class QueryUtilsUnitTests {
 
-    public Connection connection = DriverManager.getConnection("ojai:mapr:");
-    public String name = "name";
-    public String value = "test";
+    private Connection connection = DriverManager.getConnection("ojai:mapr:");
+    private String name = "name";
+    private String value = "test";
 
     @Test
     public void convertPartToQueryConditionTest() {
@@ -85,7 +85,7 @@ public class QueryUtilsUnitTests {
 
     @Test
     public void floatSetIsTest() {
-        Object value = 18F;
+        float value = 18F;
         QueryCondition condition = connection.newCondition();
 
         QueryUtils.setIsCondition(condition, name, QueryCondition.Op.EQUAL, value);
@@ -103,7 +103,7 @@ public class QueryUtilsUnitTests {
 
     @Test
     public void shortSetIsTest() {
-        Object value = (short) 10;
+        short value = (short) 10;
         QueryCondition condition = connection.newCondition();
 
         QueryUtils.setIsCondition(condition, name, QueryCondition.Op.EQUAL, value);
@@ -136,30 +136,35 @@ public class QueryUtilsUnitTests {
         Assert.assertEquals(formatCondition(name, value), condition.toString());
     }
 
-    public String getOrAndCondition(String name, Object value) {
+    private String getOrAndCondition(String name, Object value) {
         String condition = getAndCondition(name, value);
         return String.format("(%s or %s)", condition, condition);
     }
 
-    public String getAndCondition(String name, Object value) {
+    private String getAndCondition(String name, Object value) {
         String condition = formatCondition(name, value);
         return String.format("(%s and %s)", condition, condition);
     }
 
-    public String formatCondition(String name, Object value) {
-        if(value.getClass() == String.class)
+    private String formatCondition(String name, Object value) {
+        if(value.getClass() == String.class) {
             return String.format("(%s = \"%s\")", name, value);
-        else if(value.getClass() == Date.class) {
+        } else if(value.getClass() == Date.class) {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
             sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
             return String.format("(%s = {\"$date\":\"%s\"})", name, sdf.format(value));
-        } else if(value.getClass() == Long.class || value.getClass() == Byte.class
-                || value.getClass() ==  Integer.class || value.getClass() ==  Short.class)
+        } else if(value.getClass() == Long.class) {
             return String.format("(%s = {\"$numberLong\":%s})", name, value);
-        else if(value.getClass() == Float.class)
-            return String.format("(%s = %2.0f)", name, value);
-        else
+        } else if (value.getClass() ==  Short.class) {
+            return String.format("(%s = {\"$numberShort\":%s})", name, value);
+        } else if(value.getClass() == Float.class) {
+            return String.format("(%s = {\"$numberFloat\":%s})", name, value);
+        } else if(value.getClass() ==  Integer.class) {
+            return String.format("(%s = {\"$numberInt\":%s})", name, value);
+        } else if(value.getClass() == Byte.class) {
+            return String.format("(%s = {\"$numberByte\":%s})", name, value);
+        } else {
             return String.format("(%s = %s)", name, value);
+        }
     }
-
 }

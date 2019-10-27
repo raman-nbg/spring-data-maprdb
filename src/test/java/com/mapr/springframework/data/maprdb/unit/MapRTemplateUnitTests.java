@@ -1,5 +1,6 @@
 package com.mapr.springframework.data.maprdb.unit;
 
+import com.mapr.springframework.data.maprdb.core.MapROptions;
 import com.mapr.springframework.data.maprdb.core.MapRTemplate;
 import com.mapr.springframework.data.maprdb.model.User;
 import com.mapr.springframework.data.maprdb.model.UserWithCustomTable;
@@ -10,7 +11,6 @@ import org.mockito.ArgumentMatchers;
 import org.ojai.store.Connection;
 import org.ojai.store.DocumentStore;
 
-import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
@@ -18,21 +18,17 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 public class MapRTemplateUnitTests {
-    public final static String DB_NAME = "test";
-
-    public Connection connection;
-
-    public MapRTemplate operations;
+    private final static String DB_NAME = "test";
+    private MapRTemplate operations;
 
     @Before
-    public void init() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException, InstantiationException {
-        Constructor c = MapRTemplate.class.getDeclaredConstructor(String.class, org.ojai.store.Connection.class,
-                java.sql.Connection.class);
-        c.setAccessible(true);
+    public void init() {
+        Connection connection = getConnectionMock();
 
-        connection = getConnectionMock();
-
-        operations = (MapRTemplate) c.newInstance(DB_NAME, connection, null);
+        MapROptions options = new MapROptions();
+        options.setOjaiConnection(connection);
+        options.setDatabaseName(DB_NAME);
+        operations = new MapRTemplate(options);
     }
 
     @Test
@@ -75,7 +71,7 @@ public class MapRTemplateUnitTests {
         Assert.assertNotNull(store);
     }
 
-    public Connection getConnectionMock() {
+    private Connection getConnectionMock() {
         Connection connection = mock(Connection.class);
 
         when(connection.getStore(ArgumentMatchers.anyString())).thenReturn(getDocumentStoreMock());
@@ -83,7 +79,7 @@ public class MapRTemplateUnitTests {
         return connection;
     }
 
-    public DocumentStore getDocumentStoreMock() {
+    private DocumentStore getDocumentStoreMock() {
         DocumentStore store = mock(DocumentStore.class);
         return store;
     }

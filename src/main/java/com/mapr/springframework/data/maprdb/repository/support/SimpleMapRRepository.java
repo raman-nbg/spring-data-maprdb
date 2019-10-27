@@ -21,8 +21,9 @@ public class SimpleMapRRepository<T, ID> implements MapRRepository<T, ID> {
         this.maprOperations = maprOperations;
         this.domainClass = domainClass;
 
-        if(!maprOperations.tableExists(domainClass))
+        if (maprOperations.isAutoCreateTablesEnabled() && !maprOperations.tableExists(domainClass)) {
             maprOperations.createTable(domainClass);
+        }
     }
 
     @Override

@@ -1,14 +1,17 @@
 package com.mapr.springframework.data.maprdb.core;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.RuntimeJsonMappingException;
 import com.mapr.db.MapRDB;
-import com.mapr.db.Table;
 
 import com.mapr.springframework.data.maprdb.core.mapping.Document;
 import com.mapr.springframework.data.maprdb.core.mapping.MapRId;
 import com.mapr.springframework.data.maprdb.core.mapping.MapRJsonConverter;
 import org.ojai.DocumentStream;
-import org.ojai.store.*;
+import org.ojai.store.DocumentStore;
+import org.ojai.store.DriverManager;
+import org.ojai.store.Query;
+import org.ojai.store.QueryCondition;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.annotation.Id;
@@ -28,47 +31,73 @@ public class MapRTemplate implements MapROperations {
     private org.ojai.store.Connection ojaiConnection;
     private java.sql.Connection drillConnection;
     private MapRJsonConverter converter;
+    private boolean autoCreateTables;
 
-    public MapRTemplate(final String databaseName, final String host, final String username, final String password) {
-        converter = new MapRJsonConverter();
-        this.databaseName = databaseName;
-        this.ojaiConnection = getNewOjaiConnection();
-        this.drillConnection = getNewDrillConnection(host, username, password);
+    public MapRTemplate(MapROptions options) {
+        this.databaseName = options.getDatabaseName();
+        if (this.databaseName == null) {
+            throw new IllegalArgumentException("database must be not null");
+        }
+        autoCreateTables = options.getAutoCreateTables();
+
+        converter = getOrCreateJsonConverter(options);
+        ojaiConnection = getOrCreateOjaiConnection(options);
+        drillConnection = getOrCreateDrillConnection(options);
     }
 
-    protected MapRTemplate(final String databaseName, org.ojai.store.Connection ojaiConnection,
-                           java.sql.Connection drillConnection) {
-        converter = new MapRJsonConverter();
-        this.databaseName = databaseName;
-        this.ojaiConnection = ojaiConnection;
-        this.drillConnection = drillConnection;
+    private MapRJsonConverter getOrCreateJsonConverter(MapROptions options) {
+        ObjectMapper providedObjectMapper = options.getObjectMapper();
+        if (providedObjectMapper == null) {
+            return new MapRJsonConverter();
+        } else {
+            ObjectMapper objectMapper = providedObjectMapper.copy();
+            return new MapRJsonConverter(objectMapper);
+        }
+    }
+
+    private java.sql.Connection getOrCreateDrillConnection(MapROptions options) {
+        DrillConnectionFactory drillConnectionFactory = options.getDrillConnectionFactory();
+        if (drillConnectionFactory != null) {
+            try {
+                return drillConnectionFactory.createConnection();
+            } catch (SQLException | ClassNotFoundException e) {
+                LOGGER.warn("Could not create connection to Drill", e);
+            }
+        }
+
+        return null;
+    }
+
+    private org.ojai.store.Connection getOrCreateOjaiConnection(MapROptions options) {
+        org.ojai.store.Connection providedOjaiConnection = options.getOjaiConnection();
+        if (providedOjaiConnection == null) {
+            return getNewOjaiConnection();
+        } else {
+            return providedOjaiConnection;
+        }
     }
 
     private org.ojai.store.Connection getNewOjaiConnection() {
         return DriverManager.getConnection("ojai:mapr:");
     }
 
-    private java.sql.Connection getNewDrillConnection(String host, String username, String password) {
-        try {
-            Class.forName("org.apache.drill.jdbc.Driver");
-            return java.sql.DriverManager.getConnection(String.format("jdbc:drill:drillbit=%s", host), username, password);
-        } catch (SQLException | ClassNotFoundException e) {
-            return null;
-        }
+    @Override
+    public boolean isAutoCreateTablesEnabled() {
+        return autoCreateTables;
     }
 
     @Override
-    public Connection getConnection() {
+    public org.ojai.store.Connection getConnection() {
         return ojaiConnection;
     }
 
     @Override
-    public <T> Table createTable(Class<T> entityClass) {
+    public <T> DocumentStore createTable(Class<T> entityClass) {
         return createTable(getTablePath(entityClass));
     }
 
     @Override
-    public Table createTable(final String tableName) {
+    public DocumentStore createTable(final String tableName) {
         return MapRDB.createTable(getPath(tableName));
     }
 
